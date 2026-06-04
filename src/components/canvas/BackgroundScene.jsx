@@ -1,21 +1,23 @@
-import { useRef, useMemo, useState } from 'react'
+import { useRef, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { MeshDistortMaterial, Float, Environment, Sphere } from '@react-three/drei'
+import { MeshDistortMaterial, Float } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
-import * as THREE from 'three'
 
-function SubtleDrip({ startPosition, delay, onComplete }) {
+function seed(i, salt) {
+  const v = Math.sin((i + 1) * 9301 + salt * 49297) * 233280
+  return v - Math.floor(v)
+}
+
+function SubtleDrip({ startPosition, delay }) {
   const ref = useRef()
   const startTime = useRef(null)
   const duration = 4
-  
+
   useFrame((state) => {
     if (!ref.current) return
     if (startTime.current === null) startTime.current = state.clock.elapsedTime
-    
     const elapsed = state.clock.elapsedTime - startTime.current - delay
     if (elapsed < 0) return
-    
     const progress = elapsed / duration
     if (progress >= 1) {
       startTime.current = null
@@ -23,10 +25,8 @@ function SubtleDrip({ startPosition, delay, onComplete }) {
       ref.current.scale.setScalar(0)
       return
     }
-    
     ref.current.position.y = startPosition[1] - progress * 4
     ref.current.position.x = startPosition[0] + Math.sin(progress * Math.PI) * 0.15
-    
     const scale = (1 - progress) * 0.08
     ref.current.scale.setScalar(scale)
     ref.current.material.opacity = (1 - progress) * 0.6
@@ -47,17 +47,24 @@ function SubtleDrip({ startPosition, delay, onComplete }) {
 }
 
 function LiquidDrips() {
-  const drips = useMemo(() => {
-    return Array.from({ length: 5 }, (_, i) => ({
-      position: [(Math.random() - 0.5) * 3, 4 + Math.random() * 2, (Math.random() - 0.5)],
-      delay: i * 2 + Math.random(),
-      key: i
-    }))
-  }, [])
-
+  const drips = useMemo(
+    () =>
+      Array.from({ length: 5 }, (_, i) => ({
+        position: [
+          (seed(i, 1) - 0.5) * 3,
+          4 + seed(i, 2) * 2,
+          seed(i, 3) - 0.5,
+        ],
+        delay: i * 2 + seed(i, 4) * 0.6,
+        key: i,
+      })),
+    [],
+  )
   return (
     <group>
-      {drips.map(d => <SubtleDrip key={d.key} startPosition={d.position} delay={d.delay} />)}
+      {drips.map((d) => (
+        <SubtleDrip key={d.key} startPosition={d.position} delay={d.delay} />
+      ))}
     </group>
   )
 }
@@ -67,35 +74,30 @@ function ChromeRing() {
   const groupRef = useRef()
   const { pointer } = useThree()
   const targetTilt = useRef({ x: 0, y: 0 })
-  
+
   useFrame((state) => {
     if (!meshRef.current) return
-    
     const t = state.clock.elapsedTime
     const px = pointer.x
     const py = pointer.y
-    
     const scrollY = window.scrollY || 0
     const maxScroll = Math.max(1, document.body.scrollHeight - window.innerHeight)
     const scrollPct = Math.min(scrollY / maxScroll, 1)
-    
     const speed = 0.02
-    
+
     meshRef.current.rotation.x = t * speed + py * 0.05
     meshRef.current.rotation.y = t * speed * 1.3 + px * 0.08
-    
+
     targetTilt.current.x = px * 0.3
     targetTilt.current.y = -py * 0.2
-    
+
     meshRef.current.rotation.z += (targetTilt.current.x - meshRef.current.rotation.z) * 0.08
     if (groupRef.current) {
       groupRef.current.rotation.x += (targetTilt.current.y - groupRef.current.rotation.x) * 0.08
       groupRef.current.rotation.z = Math.sin(t * 0.4) * 0.08
     }
-    
     const scale = 1.4 - scrollPct * 0.4
     meshRef.current.scale.setScalar(scale)
-    
     const wobbleX = Math.sin(t * 0.35) * 0.12 + px * 0.12
     const wobbleY = Math.cos(t * 0.28) * 0.08 + py * 0.1
     meshRef.current.position.x = wobbleX
@@ -123,16 +125,40 @@ function ChromeRing() {
   )
 }
 
+function WireframeCore() {
+  const ref = useRef()
+  useFrame((state) => {
+    if (!ref.current) return
+    const t = state.clock.elapsedTime
+    ref.current.rotation.x = t * 0.08
+    ref.current.rotation.y = t * 0.12
+    const scrollY = window.scrollY || 0
+    const maxScroll = Math.max(1, document.body.scrollHeight - window.innerHeight)
+    const scrollPct = Math.min(scrollY / maxScroll, 1)
+    ref.current.position.y = -scrollPct * 1.5
+  })
+  return (
+    <mesh ref={ref} position={[0, 0, -3]}>
+      <icosahedronGeometry args={[1.6, 1]} />
+      <meshBasicMaterial
+        color="#ffffff"
+        wireframe
+        transparent
+        opacity={0.18}
+      />
+    </mesh>
+  )
+}
+
 function Stars() {
   const starsRef = useRef()
-  const count = 800
-  
+  const count = 400
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 40
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 40
-      pos[i * 3 + 2] = -15 - Math.random() * 20
+      pos[i * 3] = (seed(i, 10) - 0.5) * 40
+      pos[i * 3 + 1] = (seed(i, 11) - 0.5) * 40
+      pos[i * 3 + 2] = -15 - seed(i, 12) * 20
     }
     return pos
   }, [])
@@ -146,9 +172,20 @@ function Stars() {
   return (
     <points ref={starsRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positions}
+          itemSize={3}
+        />
       </bufferGeometry>
-      <pointsMaterial size={0.05} color="#ffffff" transparent opacity={0.5} sizeAttenuation />
+      <pointsMaterial
+        size={0.03}
+        color="#ffffff"
+        transparent
+        opacity={0.5}
+        sizeAttenuation
+      />
     </points>
   )
 }
@@ -157,22 +194,12 @@ function FlaringLights() {
   const cyanRef = useRef()
   const purpleRef = useRef()
   const magentaRef = useRef()
-  
+
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    
-    if (cyanRef.current) {
-      const flare = Math.sin(t * 0.7) * 0.5 + 0.5
-      cyanRef.current.intensity = 80 + flare * 140
-    }
-    if (purpleRef.current) {
-      const flare = Math.sin(t * 0.5 + 2) * 0.5 + 0.5
-      purpleRef.current.intensity = 80 + flare * 140
-    }
-    if (magentaRef.current) {
-      const flare = Math.sin(t * 0.6 + 4) * 0.5 + 0.5
-      magentaRef.current.intensity = 60 + flare * 100
-    }
+    if (cyanRef.current) cyanRef.current.intensity = 60 + Math.sin(t * 0.7) * 60 + 60
+    if (purpleRef.current) purpleRef.current.intensity = 60 + Math.sin(t * 0.5 + 2) * 60 + 60
+    if (magentaRef.current) magentaRef.current.intensity = 50 + Math.sin(t * 0.6 + 4) * 40 + 50
   })
 
   return (
@@ -180,32 +207,49 @@ function FlaringLights() {
       <ambientLight intensity={0.5} />
       <directionalLight position={[8, 8, 8]} intensity={2} color="#ffffff" />
       <directionalLight position={[-8, -4, -4]} intensity={0.6} color="#6666ff" />
-      <pointLight ref={purpleRef} position={[-5, 3, 5]} intensity={120} color="#aa3bff" />
-      <pointLight ref={cyanRef} position={[5, -3, 5]} intensity={120} color="#00ffff" />
-      <pointLight ref={magentaRef} position={[0, -5, 3]} intensity={80} color="#ff00ff" />
-      <pointLight position={[0, 5, 6]} intensity={60} color="#ffffff" />
+      <pointLight ref={purpleRef} position={[-5, 3, 5]} intensity={100} color="#aa3bff" />
+      <pointLight ref={cyanRef} position={[5, -3, 5]} intensity={100} color="#00ffff" />
+      <pointLight ref={magentaRef} position={[0, -5, 3]} intensity={70} color="#ff00ff" />
+      <pointLight position={[0, 5, 6]} intensity={50} color="#ffffff" />
     </>
   )
 }
 
 export default function BackgroundScene() {
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', pointerEvents: 'none', zIndex: 0 }}>
-      <Canvas 
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }}
+    >
+      <Canvas
         style={{ pointerEvents: 'none' }}
         camera={{ position: [0, 0, 8] }}
         gl={{ preserveDrawingBuffer: true }}
       >
         <color attach="background" args={['#030303']} />
-        <Environment preset="city" background={false} />
-        
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[8, 8, 8]} intensity={2} color="#ffffff" />
+
         <Stars />
         <FlaringLights />
         <ChromeRing />
+        <WireframeCore />
         <LiquidDrips />
-        
+
         <EffectComposer>
-          <Bloom intensity={0.4} luminanceThreshold={0.3} luminanceSmoothing={0.9} mipmapBlur />
+          <Bloom
+            intensity={0.25}
+            luminanceThreshold={0.5}
+            luminanceSmoothing={0.9}
+            mipmapBlur
+          />
         </EffectComposer>
       </Canvas>
     </div>

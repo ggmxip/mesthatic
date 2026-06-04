@@ -4,7 +4,43 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mesthatic</title>
+    <meta name="theme-color" content="#030303" />
+    <meta name="color-scheme" content="dark" />
+
+    <title>Aditya Ishan — Associate Business Analyst @ Koch Industries</title>
+    <meta
+      name="description"
+      content="Building automated workflows and high-fidelity web experiences — turning business analysis into shipped product. Portfolio of Aditya Ishan, Associate Business Analyst at Koch Industries."
+    />
+    <meta name="author" content="Aditya Ishan" />
+    <meta name="keywords" content="Aditya Ishan, ggmxip, Koch Industries, Business Analyst, UKG Kronos, ServiceNow, React, Three.js, Portfolio" />
+    <link rel="canonical" href="https://adityaishan.social/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://adityaishan.social/" />
+    <meta property="og:title" content="Aditya Ishan — Associate Business Analyst @ Koch Industries" />
+    <meta
+      property="og:description"
+      content="Building automated workflows and high-fidelity web experiences — turning business analysis into shipped product."
+    />
+    <meta property="og:site_name" content="Aditya Ishan" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="https://adityaishan.social/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://adityaishan.social/" />
+    <meta name="twitter:title" content="Aditya Ishan — Associate Business Analyst @ Koch Industries" />
+    <meta
+      name="twitter:description"
+      content="Building automated workflows and high-fidelity web experiences — turning business analysis into shipped product."
+    />
+    <meta name="twitter:image" content="https://adityaishan.social/og-image.png" />
+    <meta name="twitter:creator" content="@ggmxip" />
+
     <style>
       html.lenis, html.lenis body {
         height: auto;
@@ -25,7 +61,7 @@
     <script type="module" src="/src/main.jsx"></script>
     <script type="module">
       import Lenis from 'https://cdn.jsdelivr.net/npm/lenis@1.1.23/+esm'
-      
+
       const lenis = new Lenis({
         duration: 1,
         easing: (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
@@ -35,14 +71,14 @@
         lerp: 0.1,
         smoothTouch: true,
       })
-      
+
       function raf(time) {
         lenis.raf(time)
         requestAnimationFrame(raf)
       }
-      
+
       requestAnimationFrame(raf)
-      
+
       window.addEventListener('load', () => {
         setTimeout(() => lenis.resize(), 100)
       })

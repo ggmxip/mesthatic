@@ -56,8 +56,9 @@ section {
   100% { transform: translateX(100%); }
 }
 
-.animate-shine {
-  animation: shine 3s ease-in-out infinite;
+@keyframes shine-skeleton {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
 }
 
 @keyframes breathe {
@@ -68,4 +69,99 @@ section {
 @keyframes metallicShine {
   0%, 100% { background-position: 0% 0%; }
   50% { background-position: 0% 100%; }
+}
+
+.metal-text {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #f4f4f5 25%,
+    #d4d4d8 50%,
+    #71717a 80%,
+    #52525b 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-handle {
+  color: #f8fafc;
+  font-size: clamp(3.2rem, 12vw, 8.8rem);
+  font-weight: 900;
+  line-height: 0.86;
+  letter-spacing: 0;
+  -webkit-text-fill-color: #f8fafc;
+  -webkit-text-stroke-width: 1.5px;
+  -webkit-text-stroke-color: rgba(0, 0, 0, 0.72);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.42),
+    0 3px 0 rgba(130, 130, 140, 0.7),
+    0 6px 18px rgba(0, 0, 0, 0.98),
+    0 20px 52px rgba(0, 0, 0, 0.96);
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.32))
+    drop-shadow(0 10px 26px rgba(0, 0, 0, 0.95));
+}
+
+.metal-border {
+  position: relative;
+  isolation: isolate;
+}
+
+.metal-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0.05) 40%,
+    rgba(0, 0, 0, 0.4) 60%,
+    rgba(255, 255, 255, 0.2)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.shine-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 60%
+  );
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+
+.shine-sweep:hover::after {
+  animation: shine-sweep 1s ease-out;
+}
+
+@keyframes shine-sweep {
+  to { transform: translateX(100%); }
+}
+
+.noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' /></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
