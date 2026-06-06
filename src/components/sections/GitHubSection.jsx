@@ -48,6 +48,16 @@ const LANG_COLORS = {
   Shell: '#89e051',
 }
 
+function safeUrl(u) {
+  if (!u) return ''
+  try {
+    const proto = new URL(u, location.origin).protocol
+    return /^https?:$/i.test(proto) ? u : ''
+  } catch {
+    return ''
+  }
+}
+
 function Skeleton({ className = '' }) {
   return (
     <div
@@ -116,7 +126,7 @@ export default function GitHubSection() {
               <div className="relative">
                 {data ? (
                   <img
-                    src={data.profile.avatar}
+                    src={safeUrl(data.profile.avatar)}
                     alt={data.profile.login}
                     className="h-20 w-20 rounded-full border-2 border-white/20"
                     style={{
@@ -207,7 +217,7 @@ export default function GitHubSection() {
             featured.map((r, i) => (
               <motion.a
                 key={r.id}
-                href={r.htmlUrl}
+                href={safeUrl(r.htmlUrl)}
                 target="_blank"
                 rel="noreferrer"
                 initial={{ opacity: 0, y: 20 }}
