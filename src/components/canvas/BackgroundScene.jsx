@@ -1,12 +1,5 @@
 import { useRef, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { MeshDistortMaterial } from '@react-three/drei'
-import { EffectComposer, Bloom } from '@react-three/postprocessing'
-
-function seed(i, salt) {
-  const v = Math.sin((i + 1) * 9301 + salt * 49297) * 233280
-  return v - Math.floor(v)
-}
 
 function ChromeRing() {
   const meshRef = useRef()
@@ -21,10 +14,9 @@ function ChromeRing() {
     const scrollY = window.scrollY || 0
     const maxScroll = Math.max(1, document.body.scrollHeight - window.innerHeight)
     const scrollPct = Math.min(scrollY / maxScroll, 1)
-    const speed = 0.02
 
-    meshRef.current.rotation.x = t * speed + py * 0.05
-    meshRef.current.rotation.y = t * speed * 1.3 + px * 0.08
+    meshRef.current.rotation.x = t * 0.02 + py * 0.05
+    meshRef.current.rotation.y = t * 0.026 + px * 0.08
 
     if (groupRef.current) {
       groupRef.current.rotation.x += (-py * 0.2 - groupRef.current.rotation.x) * 0.08
@@ -40,16 +32,12 @@ function ChromeRing() {
   return (
     <group ref={groupRef}>
       <mesh ref={meshRef}>
-        <torusGeometry args={[2, 0.45, 24, 48]} />
-        <MeshDistortMaterial
+        <torusGeometry args={[2, 0.45, 20, 32]} />
+        <meshStandardMaterial
           color="#fafafa"
           metalness={1}
-          roughness={0.02}
-          clearcoat={2}
-          clearcoatRoughness={0}
-          envMapIntensity={5}
-          distort={0.025}
-          speed={0.6}
+          roughness={0.1}
+          envMapIntensity={2}
         />
       </mesh>
     </group>
@@ -75,7 +63,7 @@ function WireframeCore() {
         color="#ffffff"
         wireframe
         transparent
-        opacity={0.18}
+        opacity={0.15}
       />
     </mesh>
   )
@@ -83,38 +71,31 @@ function WireframeCore() {
 
 function Stars() {
   const starsRef = useRef()
-  const count = 200
   const positions = useMemo(() => {
-    const pos = new Float32Array(count * 3)
-    for (let i = 0; i < count; i++) {
-      pos[i * 3] = (seed(i, 10) - 0.5) * 40
-      pos[i * 3 + 1] = (seed(i, 11) - 0.5) * 40
-      pos[i * 3 + 2] = -15 - seed(i, 12) * 20
+    const pos = new Float32Array(150 * 3)
+    for (let i = 0; i < 150; i++) {
+      pos[i * 3] = (Math.sin((i + 1) * 9301) - 0.5) * 40
+      pos[i * 3 + 1] = (Math.sin((i + 1) * 49297) - 0.5) * 40
+      pos[i * 3 + 2] = -15 - Math.sin(i * 233280) * 20
     }
     return pos
   }, [])
-
-  useFrame((state) => {
-    if (starsRef.current) {
-      starsRef.current.rotation.z = state.clock.elapsedTime * 0.01
-    }
-  })
 
   return (
     <points ref={starsRef}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={count}
+          count={150}
           array={positions}
           itemSize={3}
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.03}
+        size={0.025}
         color="#ffffff"
         transparent
-        opacity={0.5}
+        opacity={0.4}
         sizeAttenuation
       />
     </points>
@@ -122,22 +103,13 @@ function Stars() {
 }
 
 function Lights() {
-  const cyanRef = useRef()
-  const purpleRef = useRef()
-
-  useFrame((state) => {
-    const t = state.clock.elapsedTime
-    if (cyanRef.current) cyanRef.current.intensity = 30 + Math.sin(t * 0.7) * 20
-    if (purpleRef.current) purpleRef.current.intensity = 30 + Math.sin(t * 0.5 + 2) * 20
-  })
-
   return (
     <>
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[8, 8, 8]} intensity={1.5} color="#ffffff" />
-      <directionalLight position={[-8, -4, -4]} intensity={0.4} color="#6666ff" />
-      <pointLight ref={purpleRef} position={[-4, 2, 4]} intensity={50} color="#aa3bff" />
-      <pointLight ref={cyanRef} position={[4, -2, 4]} intensity={50} color="#00ffff" />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[8, 8, 8]} intensity={1.2} color="#ffffff" />
+      <directionalLight position={[-8, -4, -4]} intensity={0.3} color="#6666ff" />
+      <pointLight position={[-4, 2, 4]} intensity={30} color="#aa3bff" />
+      <pointLight position={[4, -2, 4]} intensity={30} color="#00ffff" />
     </>
   )
 }
@@ -158,24 +130,13 @@ export default function BackgroundScene() {
       <Canvas
         style={{ pointerEvents: 'none' }}
         camera={{ position: [0, 0, 8] }}
-        dpr={[1, 1.5]}
-        gl={{ preserveDrawingBuffer: true, powerPreference: 'high-performance' }}
+        dpr={[0.5, 1]}
       >
         <color attach="background" args={['#030303']} />
-
         <Stars />
         <Lights />
         <ChromeRing />
         <WireframeCore />
-
-        <EffectComposer>
-          <Bloom
-            intensity={0.15}
-            luminanceThreshold={0.6}
-            luminanceSmoothing={0.9}
-            mipmapBlur
-          />
-        </EffectComposer>
       </Canvas>
     </div>
   )
