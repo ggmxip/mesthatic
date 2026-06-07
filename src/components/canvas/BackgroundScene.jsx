@@ -1,10 +1,79 @@
 import { useRef, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { MeshDistortMaterial, Float } from '@react-three/drei'
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
+
+function seed(i, salt) {
+  const v = Math.sin((i + 1) * 9301 + salt * 49297) * 233280
+  return v - Math.floor(v)
+}
+
+function SubtleDrip({ startPosition, delay }) {
+  const ref = useRef()
+  const startTime = useRef(null)
+  const duration = 4
+
+  useFrame((state) => {
+    if (!ref.current) return
+    if (startTime.current === null) startTime.current = state.clock.elapsedTime
+    const elapsed = state.clock.elapsedTime - startTime.current - delay
+    if (elapsed < 0) return
+    const progress = elapsed / duration
+    if (progress >= 1) {
+      startTime.current = null
+      ref.current.position.y = startPosition[1]
+      ref.current.scale.setScalar(0)
+      return
+    }
+    ref.current.position.y = startPosition[1] - progress * 4
+    ref.current.position.x = startPosition[0] + Math.sin(progress * Math.PI) * 0.15
+    const scale = (1 - progress) * 0.08
+    ref.current.scale.setScalar(scale)
+    ref.current.material.opacity = (1 - progress) * 0.6
+  })
+
+  return (
+    <mesh ref={ref} position={startPosition}>
+      <sphereGeometry args={[1, 16, 16]} />
+      <meshStandardMaterial
+        color="#cccccc"
+        metalness={1}
+        roughness={0.1}
+        transparent
+        opacity={0.6}
+      />
+    </mesh>
+  )
+}
+
+function LiquidDrips() {
+  const drips = useMemo(
+    () =>
+      Array.from({ length: 5 }, (_, i) => ({
+        position: [
+          (seed(i, 1) - 0.5) * 3,
+          4 + seed(i, 2) * 2,
+          seed(i, 3) - 0.5,
+        ],
+        delay: i * 2 + seed(i, 4) * 0.6,
+        key: i,
+      })),
+    [],
+  )
+  return (
+    <group>
+      {drips.map((d) => (
+        <SubtleDrip key={d.key} startPosition={d.position} delay={d.delay} />
+      ))}
+    </group>
+  )
+}
 
 function ChromeRing() {
   const meshRef = useRef()
   const groupRef = useRef()
   const { pointer } = useThree()
+  const targetTilt = useRef({ x: 0, y: 0 })
 
   useFrame((state) => {
     if (!meshRef.current) return
@@ -14,32 +83,44 @@ function ChromeRing() {
     const scrollY = window.scrollY || 0
     const maxScroll = Math.max(1, document.body.scrollHeight - window.innerHeight)
     const scrollPct = Math.min(scrollY / maxScroll, 1)
+    const speed = 0.02
 
-    meshRef.current.rotation.x = t * 0.02 + py * 0.05
-    meshRef.current.rotation.y = t * 0.026 + px * 0.08
+    meshRef.current.rotation.x = t * speed + py * 0.05
+    meshRef.current.rotation.y = t * speed * 1.3 + px * 0.08
 
+    targetTilt.current.x = px * 0.3
+    targetTilt.current.y = -py * 0.2
+
+    meshRef.current.rotation.z += (targetTilt.current.x - meshRef.current.rotation.z) * 0.08
     if (groupRef.current) {
-      groupRef.current.rotation.x += (-py * 0.2 - groupRef.current.rotation.x) * 0.08
+      groupRef.current.rotation.x += (targetTilt.current.y - groupRef.current.rotation.x) * 0.08
       groupRef.current.rotation.z = Math.sin(t * 0.4) * 0.08
     }
-
     const scale = 1.4 - scrollPct * 0.4
     meshRef.current.scale.setScalar(scale)
-    meshRef.current.position.x = Math.sin(t * 0.35) * 0.12 + px * 0.12
-    meshRef.current.position.y = Math.cos(t * 0.28) * 0.08 + py * 0.1
+    const wobbleX = Math.sin(t * 0.35) * 0.12 + px * 0.12
+    const wobbleY = Math.cos(t * 0.28) * 0.08 + py * 0.1
+    meshRef.current.position.x = wobbleX
+    meshRef.current.position.y = wobbleY
   })
 
   return (
     <group ref={groupRef}>
-      <mesh ref={meshRef}>
-        <torusGeometry args={[2, 0.45, 20, 32]} />
-        <meshStandardMaterial
-          color="#fafafa"
-          metalness={1}
-          roughness={0.1}
-          envMapIntensity={2}
-        />
-      </mesh>
+      <Float speed={0.3} rotationIntensity={0.02} floatIntensity={0.05}>
+        <mesh ref={meshRef}>
+          <torusGeometry args={[2, 0.45, 32, 64]} />
+          <MeshDistortMaterial
+            color="#fafafa"
+            metalness={1}
+            roughness={0.02}
+            clearcoat={2}
+            clearcoatRoughness={0}
+            envMapIntensity={5}
+            distort={0.025}
+            speed={0.6}
+          />
+        </mesh>
+      </Float>
     </group>
   )
 }
@@ -58,12 +139,12 @@ function WireframeCore() {
   })
   return (
     <mesh ref={ref} position={[0, 0, -3]}>
-      <icosahedronGeometry args={[1.6, 0]} />
+      <icosahedronGeometry args={[1.6, 1]} />
       <meshBasicMaterial
         color="#ffffff"
         wireframe
         transparent
-        opacity={0.15}
+        opacity={0.18}
       />
     </mesh>
   )
@@ -71,45 +152,65 @@ function WireframeCore() {
 
 function Stars() {
   const starsRef = useRef()
+  const count = 400
   const positions = useMemo(() => {
-    const pos = new Float32Array(150 * 3)
-    for (let i = 0; i < 150; i++) {
-      pos[i * 3] = (Math.sin((i + 1) * 9301) - 0.5) * 40
-      pos[i * 3 + 1] = (Math.sin((i + 1) * 49297) - 0.5) * 40
-      pos[i * 3 + 2] = -15 - Math.sin(i * 233280) * 20
+    const pos = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (seed(i, 10) - 0.5) * 40
+      pos[i * 3 + 1] = (seed(i, 11) - 0.5) * 40
+      pos[i * 3 + 2] = -15 - seed(i, 12) * 20
     }
     return pos
   }, [])
+
+  useFrame((state) => {
+    if (starsRef.current) {
+      starsRef.current.rotation.z = state.clock.elapsedTime * 0.01
+    }
+  })
 
   return (
     <points ref={starsRef}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={150}
+          count={count}
           array={positions}
           itemSize={3}
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.025}
+        size={0.03}
         color="#ffffff"
         transparent
-        opacity={0.4}
+        opacity={0.5}
         sizeAttenuation
       />
     </points>
   )
 }
 
-function Lights() {
+function FlaringLights() {
+  const cyanRef = useRef()
+  const purpleRef = useRef()
+  const magentaRef = useRef()
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    if (cyanRef.current) cyanRef.current.intensity = 60 + Math.sin(t * 0.7) * 60 + 60
+    if (purpleRef.current) purpleRef.current.intensity = 60 + Math.sin(t * 0.5 + 2) * 60 + 60
+    if (magentaRef.current) magentaRef.current.intensity = 50 + Math.sin(t * 0.6 + 4) * 40 + 50
+  })
+
   return (
     <>
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[8, 8, 8]} intensity={1.2} color="#ffffff" />
-      <directionalLight position={[-8, -4, -4]} intensity={0.3} color="#6666ff" />
-      <pointLight position={[-4, 2, 4]} intensity={30} color="#aa3bff" />
-      <pointLight position={[4, -2, 4]} intensity={30} color="#00ffff" />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[8, 8, 8]} intensity={2} color="#ffffff" />
+      <directionalLight position={[-8, -4, -4]} intensity={0.6} color="#6666ff" />
+      <pointLight ref={purpleRef} position={[-5, 3, 5]} intensity={100} color="#aa3bff" />
+      <pointLight ref={cyanRef} position={[5, -3, 5]} intensity={100} color="#00ffff" />
+      <pointLight ref={magentaRef} position={[0, -5, 3]} intensity={70} color="#ff00ff" />
+      <pointLight position={[0, 5, 6]} intensity={50} color="#ffffff" />
     </>
   )
 }
@@ -130,13 +231,26 @@ export default function BackgroundScene() {
       <Canvas
         style={{ pointerEvents: 'none' }}
         camera={{ position: [0, 0, 8] }}
-        dpr={[0.5, 1]}
+        gl={{ preserveDrawingBuffer: true }}
       >
         <color attach="background" args={['#030303']} />
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[8, 8, 8]} intensity={2} color="#ffffff" />
+
         <Stars />
-        <Lights />
+        <FlaringLights />
         <ChromeRing />
         <WireframeCore />
+        <LiquidDrips />
+
+        <EffectComposer>
+          <Bloom
+            intensity={0.25}
+            luminanceThreshold={0.5}
+            luminanceSmoothing={0.9}
+            mipmapBlur
+          />
+        </EffectComposer>
       </Canvas>
     </div>
   )
