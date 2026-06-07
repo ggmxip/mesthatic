@@ -8,67 +8,6 @@ function seed(i, salt) {
   return v - Math.floor(v)
 }
 
-function SubtleDrip({ startPosition, delay }) {
-  const ref = useRef()
-  const startTime = useRef(null)
-  const duration = 4
-
-  useFrame((state) => {
-    if (!ref.current) return
-    if (startTime.current === null) startTime.current = state.clock.elapsedTime
-    const elapsed = state.clock.elapsedTime - startTime.current - delay
-    if (elapsed < 0) return
-    const progress = elapsed / duration
-    if (progress >= 1) {
-      startTime.current = null
-      ref.current.position.y = startPosition[1]
-      ref.current.scale.setScalar(0)
-      return
-    }
-    ref.current.position.y = startPosition[1] - progress * 4
-    ref.current.position.x = startPosition[0] + Math.sin(progress * Math.PI) * 0.15
-    const scale = (1 - progress) * 0.08
-    ref.current.scale.setScalar(scale)
-    ref.current.material.opacity = (1 - progress) * 0.6
-  })
-
-  return (
-    <mesh ref={ref} position={startPosition}>
-      <sphereGeometry args={[1, 16, 16]} />
-      <meshStandardMaterial
-        color="#cccccc"
-        metalness={1}
-        roughness={0.1}
-        transparent
-        opacity={0.6}
-      />
-    </mesh>
-  )
-}
-
-function LiquidDrips() {
-  const drips = useMemo(
-    () =>
-      Array.from({ length: 5 }, (_, i) => ({
-        position: [
-          (seed(i, 1) - 0.5) * 3,
-          4 + seed(i, 2) * 2,
-          seed(i, 3) - 0.5,
-        ],
-        delay: i * 2 + seed(i, 4) * 0.6,
-        key: i,
-      })),
-    [],
-  )
-  return (
-    <group>
-      {drips.map((d) => (
-        <SubtleDrip key={d.key} startPosition={d.position} delay={d.delay} />
-      ))}
-    </group>
-  )
-}
-
 function ChromeRing() {
   const meshRef = useRef()
   const groupRef = useRef()
@@ -241,7 +180,6 @@ export default function BackgroundScene() {
         <FlaringLights />
         <ChromeRing />
         <WireframeCore />
-        <LiquidDrips />
 
         <EffectComposer>
           <Bloom
