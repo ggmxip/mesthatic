@@ -41,7 +41,8 @@ export const experience = [
   },
 ]
 
-export const projects = [
+/*
+const legacyProjects = [
   {
     id: 'soothe',
     name: 'Soothe',
@@ -87,6 +88,73 @@ export const projects = [
     stack: ['Go', 'JavaScript', 'Chart.js', 'Pusher'],
     repo: null,
     private: true,
+  },
+]
+*/
+
+export const projects = [
+  {
+    id: 'soothe',
+    name: 'Soothe',
+    year: '2026',
+    blurb:
+      'A private, on-device daily tracker for smoking habits and money spent. Built with React Native + Expo.',
+    stack: ['React Native', 'Expo', 'JavaScript'],
+    repo: 'https://github.com/ggmxip/soothe',
+  },
+  {
+    id: 'modal-ml-inference',
+    name: 'modal-ml-inference',
+    year: '2026',
+    blurb:
+      'Production-grade serverless ML inference on Modal with GPU execution, batching, rate limiting, and observability.',
+    stack: ['Python', 'Modal', 'ML Inference', 'Serverless'],
+    repo: 'https://github.com/ggmxip/modal-ml-inference',
+  },
+  {
+    id: 'py-game',
+    name: 'py-game',
+    year: '2026',
+    blurb:
+      'A six-phase Python game learning roadmap spanning beginner challenges, Pygame, roguelikes, FastAPI, and WebSockets.',
+    stack: ['Python', 'Pygame', 'FastAPI', 'WebSocket'],
+    repo: 'https://github.com/ggmxip/py-game',
+  },
+  {
+    id: 'synclog',
+    name: 'SyncLog',
+    year: '2026',
+    blurb:
+      'AI-generated project autobiography dashboard for GitHub repositories, turning repo history into readable project context.',
+    stack: ['TypeScript', 'GitHub', 'AI', 'Dashboard'],
+    repo: 'https://github.com/ggmxip/synclog',
+  },
+  {
+    id: 'topoconnect',
+    name: 'TopoConnect',
+    year: '2024',
+    blurb:
+      'A visual tool for computer network topologies with drag-and-drop nodes for Star, Ring, Mesh, Bus, and Tree networks.',
+    stack: ['Flask', 'Cytoscape.js', 'JavaScript'],
+    repo: 'https://github.com/ggmxip/TopoConnect',
+  },
+  {
+    id: 'blockvote',
+    name: 'BlockVote',
+    year: '2024',
+    blurb:
+      'Decentralized voting app with Ethereum smart contracts, MetaMask auth, and one-vote-per-wallet logic.',
+    stack: ['React', 'Solidity', 'Hardhat', 'Ethers.js', 'MetaMask'],
+    repo: 'https://github.com/ggmxip/BlockVote',
+  },
+  {
+    id: 'flipfull-web',
+    name: 'flipfull-web',
+    year: '2026',
+    blurb:
+      'Automatically expands truncated product names on Flipkart so full titles are visible without extra clicks.',
+    stack: ['JavaScript', 'Chrome Extension', 'HTML', 'CSS'],
+    repo: 'https://github.com/ggmxip/flipfull-web',
   },
 ]
 

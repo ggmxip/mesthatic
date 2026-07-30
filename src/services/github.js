@@ -5,6 +5,16 @@ const CACHE_KEY = `gh:${USERNAME}`
 const CACHE_TTL = 60 * 60 * 1000
 
 const HEADERS = { Accept: 'application/vnd.github+json' }
+const FEATURED_REPOS = [
+  'soothe',
+  'modal-ml-inference',
+  'py-game',
+  'synclog',
+  'TopoConnect',
+  'BlockVote',
+  'flipfull-web',
+  'GoAnalytics',
+]
 
 function readCache() {
   try {
@@ -83,9 +93,21 @@ export function contributionChartUrl() {
 }
 
 export function topRepos(repos, limit = 6) {
+  const featuredRank = new Map(FEATURED_REPOS.map((name, i) => [name, i]))
+
   return [...repos]
     .sort((a, b) => {
+      const ar = featuredRank.get(a.name) ?? Number.POSITIVE_INFINITY
+      const br = featuredRank.get(b.name) ?? Number.POSITIVE_INFINITY
+      if (ar !== br) return ar - br
+
       if (b.stars !== a.stars) return b.stars - a.stars
+      if (Boolean(b.description) !== Boolean(a.description)) {
+        return b.description ? -1 : 1
+      }
+      if ((b.topics?.length ?? 0) !== (a.topics?.length ?? 0)) {
+        return (b.topics?.length ?? 0) - (a.topics?.length ?? 0)
+      }
       return new Date(b.updatedAt) - new Date(a.updatedAt)
     })
     .slice(0, limit)

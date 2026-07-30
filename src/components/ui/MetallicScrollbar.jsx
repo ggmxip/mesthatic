@@ -62,24 +62,25 @@ export default function MetallicScrollbar({ sections }) {
 
   return (
     <div className="fixed right-6 md:right-10 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col items-center pointer-events-auto">
-      <div className="relative h-96 w-px">
-        <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/5 to-white/10 rounded-full" />
+      <div className="relative h-96 w-8">
+        <div className="absolute left-1/2 top-0 h-full w-[3px] -translate-x-1/2 rounded-full bg-gradient-to-b from-white/15 via-white/5 to-white/15 shadow-[inset_0_0_8px_rgba(255,255,255,0.12)]" />
         <div
-          className="absolute w-px bg-gradient-to-t from-transparent via-white/80 to-white"
+          className="absolute left-1/2 bottom-0 w-[3px] -translate-x-1/2 rounded-full bg-gradient-to-t from-cyan-300 via-white to-purple-300"
           style={{
-            bottom: 0,
             height: `${scrollProgress * 100}%`,
-            boxShadow: '0 0 15px rgba(255,255,255,0.45)',
+            boxShadow:
+              '0 0 18px rgba(0,255,255,0.38), 0 0 26px rgba(170,59,255,0.2)',
             transition: 'height 0.12s ease-out',
           }}
         />
         <div
-          className="absolute w-0 h-0 border-l-[10px] border-r-[10px] border-b-[18px] border-l-transparent border-r-transparent border-white"
+          className="absolute h-5 w-5 rounded-[4px] border border-white/80 bg-gradient-to-br from-white via-zinc-300 to-zinc-800"
           style={{
             top: `${scrollProgress * 100}%`,
             left: '50%',
-            transform: 'translate(-50%, -50%)',
-            filter: 'drop-shadow(0 0 18px rgba(255,255,255,0.9))',
+            transform: 'translate(-50%, -50%) rotate(45deg)',
+            boxShadow:
+              'inset 0 1px 0 rgba(255,255,255,0.8), 0 0 18px rgba(255,255,255,0.72)',
             transition: 'top 0.12s ease-out',
           }}
         />
@@ -90,47 +91,48 @@ export default function MetallicScrollbar({ sections }) {
           const isPast = scrollProgress >= pos
           const scale = getDiamondScale(pos)
           return (
-            <div
+            <button
               key={id}
-              className="absolute cursor-pointer group"
+              type="button"
+              aria-label={`Scroll to ${id}`}
+              className="absolute group flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center"
               style={{
                 top: `${pos * 100}%`,
                 left: '50%',
-                transform: 'translate(-50%, -50%)',
               }}
               onClick={() => handleClick(id)}
               onMouseEnter={() => setHoveredSection(id)}
               onMouseLeave={() => setHoveredSection(null)}
             >
               <div
-                className={`w-0 h-0 border-l-[7px] border-r-[7px] border-b-[12px] border-l-transparent border-r-transparent transition-all duration-300 ${
+                className={`h-3 w-3 rounded-[3px] border transition-all duration-300 ${
                   isActive || isHovered
-                    ? 'border-white'
+                    ? 'border-white bg-white'
                     : isPast
-                      ? 'border-white/60'
-                      : 'border-white/30 group-hover:border-white/55'
+                      ? 'border-white/70 bg-white/45'
+                      : 'border-white/30 bg-black/60 group-hover:border-white/60 group-hover:bg-white/25'
                 }`}
                 style={{
-                  transform: `scale(${scale})`,
-                  filter:
+                  transform: `rotate(45deg) scale(${scale})`,
+                  boxShadow:
                     isActive || isHovered
-                      ? 'drop-shadow(0 0 14px rgba(255,255,255,0.95))'
+                      ? '0 0 16px rgba(255,255,255,0.9), 0 0 22px rgba(0,255,255,0.24)'
                       : isPast
-                        ? 'drop-shadow(0 0 8px rgba(255,255,255,0.35))'
+                        ? '0 0 10px rgba(255,255,255,0.34)'
                         : 'none',
-                  transition: 'transform 0.2s ease-out, filter 0.3s',
+                  transition: 'transform 0.2s ease-out, box-shadow 0.3s',
                 }}
               />
               <span
-                className={`absolute left-3 top-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] tracking-[0.25em] uppercase font-mono transition-all duration-300 ${
+                className={`absolute right-9 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-black/65 px-2 py-1 text-[10px] tracking-[0.25em] uppercase font-mono backdrop-blur transition-all duration-300 ${
                   isActive || isHovered
                     ? 'text-white opacity-100 translate-x-0'
-                    : 'text-zinc-500 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0'
+                    : 'text-zinc-500 opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0'
                 }`}
               >
                 {id}
               </span>
-            </div>
+            </button>
           )
         })}
       </div>
